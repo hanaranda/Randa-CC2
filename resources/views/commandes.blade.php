@@ -1,0 +1,151 @@
+
+<style>
+    .payment-amount {
+     font-size: 30px;
+     padding-left: 22%;
+    }
+ 
+    .container {
+     display: flex;
+     justify-content: center;
+     align-items: center;
+     height: 100vh;
+    }
+ 
+    .order-ticket {
+     width: 600px;
+     background-color: #f9f9f9;
+     border: 1px solid #ccc;
+     padding: 20px;
+    }
+ 
+    .ticket-header {
+     margin-bottom: 20px;
+    }
+ 
+    .order-title {
+     font-size: 24px;
+     font-weight: bold;
+     margin: 0;
+     text-align: center;
+    }
+ 
+    .order-date {
+     font-weight: bold;
+     margin: 0;
+    }
+ 
+    table {
+     width: 100%;
+     border-collapse: collapse;
+    }
+ 
+    th, td {
+     padding: 10px;
+     text-align: left;
+     border-bottom: 1px solid #ccc;
+    }
+ 
+    th {
+     background-color: #f2f2f2;
+    }
+ 
+    .text-right {
+     text-align: right;
+    }
+ 
+    .download-link {
+     display: block;
+     text-align: center;
+     margin-top: 20px;
+    }
+ </style>
+ 
+ <div class="container">
+     @if(count($orders) > 0)
+         <div class="order-ticket">
+             <div class="ticket-header">
+                 <h3 class="order-title">Order Confirmation</h3>
+                 <p class="order-date">Order Date: {{ date('Y-m-d') }}</p>
+             </div>
+ 
+             <div class="ticket-body">
+                 <table>
+                     <thead>
+                         <tr>
+                             <th>Product Name</th>
+                             <th>Price</th>
+                             <th>Quantity</th>
+                             <th>Total Amount</th>
+                         </tr>
+                     </thead>
+                     <tbody>
+                         @php
+                             $orderCollection = collect($orders);
+                             $totalAmount = $orderCollection->sum('total_amount');
+                         @endphp
+ 
+                         @foreach($orders as $order)
+                             <tr>
+                                 <td>{{ $order['product_name'] }}</td>
+                                 <td>{{ $order['product_price'] }}</td>
+                                 <td>{{ $order['quantity'] }}</td>
+                                 <td>{{ $order['total_amount'] }}</td>
+                             </tr>
+                         @endforeach
+                         <tr>
+                             <td colspan="3" class="text-right"><strong>Total:</strong></td>
+                             <td>{{ $totalAmount }}</td>
+                         </tr>
+                     </tbody>
+                 </table>
+             </div>
+ 
+             <div class="ticket-footer">
+                 <p class="payment-amount">You must pay: {{ $totalAmount }}DH</p>
+ 
+                 <form id="emailForm" method="POST" action="">
+                     @csrf
+                     <input type="hidden" name="totalAmount" value="{{ $totalAmount }}">
+                 </form>
+             </div>
+             <a href="{{ route('email') }}" target="_blank">Confirmation par Email</a>
+         </div>
+ 
+         <div class="download-link">
+             <a href="{{ route('order.pdf') }}" target="_blank">Download PDF</a>
+         </div>
+         
+     @else
+         <p>No orders available.</p>
+     @endif
+ </div>
+ 
+ <script>
+     $(function () {
+         $('#emailForm').submit(function (e) {
+             e.preventDefault();
+ 
+             var form = $(this);
+             var url = form.attr('action');
+             var formData = new FormData(form[0]);
+ 
+             $.ajax({
+                 type: 'POST',
+                 url: url,
+                 data: formData,
+                 processData: false,
+                 contentType: false,
+                 success: function (response) {
+                     // Display a success message or perform other actions
+                     console.log(response);
+                 },
+                 error: function (xhr, status, error) {
+                     // Handle request errors
+                     console.error(xhr.responseText);
+                 }
+             });
+         });
+     });
+ </script>
+ 
